@@ -68,7 +68,7 @@ namespace Utils {
             const bool HasItemEntry(RE::TESBoundObject* item, RE::TESObjectREFR* inventory_owner,
                                     bool nonzero_entry_check = false);
 
-            const bool HasItem(RE::TESBoundObject* item, RE::TESObjectREFR* item_owner);
+            bool HasItem(RE::TESBoundObject* item, RE::TESObjectREFR* item_owner);
 
             void FavoriteItem(RE::TESBoundObject* item, RE::TESObjectREFR* inventory_owner);
 

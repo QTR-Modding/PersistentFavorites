@@ -99,7 +99,6 @@ elseif (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
     -Wunused-function) # GCC does not warn on unused member funcs
 endif()
 
-target_link_libraries(${PROJECT_NAME} PUBLIC yaml-cpp::yaml-cpp)
 target_compile_definitions(${PROJECT_NAME} PRIVATE IS_HOST_PLUGIN)
 
 set(wildlander_output false)

@@ -132,10 +132,10 @@ void Manager::HotkeySpell(RE::TESForm* form, const unsigned int hotkey) {
             logger::trace("HotkeySpell: Hotkey set. FormID: {:x}, Hotkey: {}", form->GetFormID(), hotkey);
             return;
         }
-        else if (hotkeyed_spell && hotkeyed_spell->GetFormID() == form->GetFormID()) {
-			logger::trace("HotkeySpell: Hotkey already set. FormID: {:x}, Hotkey: {}", form->GetFormID(), hotkey);
-			return;
-		}
+        if (hotkeyed_spell && hotkeyed_spell->GetFormID() == form->GetFormID()) {
+            logger::trace("HotkeySpell: Hotkey already set. FormID: {:x}, Hotkey: {}", form->GetFormID(), hotkey);
+            return;
+        }
         index++;
     }
     logger::error("HotkeySpell: Failed to set hotkey. FormID: {:x}, Hotkey: {}", form->GetFormID(), hotkey);
@@ -169,7 +169,7 @@ void Manager::ApplyHotkey(const FormID formid) {
         HotkeySpell(spell, hotkey);
 		return;
     }
-    else if (spell) {
+    if (spell) {
         logger::trace("Spell not found in player's spell list. FormID: {:x}", formid);
     }
 
@@ -289,8 +289,6 @@ void Manager::AddFavorites_Item() {
         if (!item.second.second) continue;
         if (item.second.second->IsFavorited()) {
             if (favorites.insert(item.first->GetFormID()).second) {
-                logger::trace("Item favorited. FormID: {:x}, EditorID: {}", item.first->GetFormID(),
-                              clib_util::editorID::get_editorID(item.first));
             }
             UpdateHotkeyMap(item.first->GetFormID(), item.second.second.get());
         } else if (favorites.contains(item.first->GetFormID())) {
@@ -314,7 +312,6 @@ void Manager::AddFavorites_Spell() {
     for (auto& spell_formid : temp_all_spells) {
         const auto spell = Utils::FunctionsSkyrim::GetFormByID(spell_formid);
         if (!spell) continue;
-        //logger::trace("Player has spell: {}", spell->GetName());
         if (IsSpellFavorited(spell_formid, favorited_spells)) {
             if (favorites.insert(spell_formid).second) {
                 logger::trace("Spell favorited. FormID: {:x}, EditorID: {}", spell_formid,
@@ -345,13 +342,9 @@ void Manager::SyncFavorites_Item(){
         if (!item.second.second) continue;
         if (item.second.second->IsFavorited()) {
             if (favorites.insert(item.first->GetFormID()).second) {
-                logger::trace("Item favorited. FormID: {:x}, EditorID: {}", item.first->GetFormID(),
-                              clib_util::editorID::get_editorID(item.first));
             }
             UpdateHotkeyMap(item.first->GetFormID(), item.second.second.get());
         } else if (RemoveFavorite(item.first->GetFormID())) {
-            logger::trace("Item erased. FormID: {:x}, EditorID: {}", item.first->GetFormID(),
-                          clib_util::editorID::get_editorID(item.first));
         }
     }
 }
@@ -368,16 +361,11 @@ void Manager::SyncFavorites_Spell(){
     for (auto& spell_formid : temp_all_spells) {
         const auto spell = Utils::FunctionsSkyrim::GetFormByID(spell_formid);
         if (!spell) continue;
-        logger::trace("Player has spell: {}", spell->GetName());
         if (IsSpellFavorited(spell_formid, favorited_spells)) {
             if (favorites.insert(spell_formid).second) {
-                logger::trace("Spell favorited. FormID: {:x}, EditorID: {}", spell_formid,
-                              clib_util::editorID::get_editorID(spell));
             }
             if (hotkeyed_spells.contains(spell_formid)) UpdateHotkeyMap(spell_formid, hotkeyed_spells.at(spell_formid));
         } else if (RemoveFavorite(spell_formid)) {
-            logger::trace("Spell erased. FormID: {:x}, EditorID: {}", spell_formid,
-                          clib_util::editorID::get_editorID(spell));
         }
     }
     temp_all_spells.clear();
@@ -413,10 +401,7 @@ void Manager::FavoriteCheck_Spell(const FormID formid){
 		RemoveFavorite(formid);
 		return;
 	}
-    logger::trace("FavoriteCheck_Spell: Favoriting spell. FormID: {:x}, EditorID: {}", formid, clib_util::editorID::get_editorID(spell));
     RE::MagicFavorites::GetSingleton()->SetFavorite(spell);
-    logger::trace("FavoriteCheck_Spell: Applying hotkey. FormID: {:x}", formid);
-    logger::info("spell name {}", spell->GetName());
 	ApplyHotkey(formid);
 };
 
@@ -506,7 +491,7 @@ void Manager::ReceiveData() {
 			logger::warn("ReceiveData: Form already favorited. FormID: {}, EditorID: {}", source_formid, source_editorid);
 			continue;
         }
-        else favorites.insert(source_formid);
+        favorites.insert(source_formid);
 
         if (IsHotkeyValid(rhs)) hotkey_map[source_formid] = rhs;
 

@@ -1,41 +1,32 @@
 
 #pragma once
 #include "Manager.h"
+#include "ClibUtil/singleton.hpp"
 
-class myEventSink : public RE::BSTEventSink<RE::MenuOpenCloseEvent>,
+class myEventSink : public clib_util::singleton::ISingleton<myEventSink>,
+                    public RE::BSTEventSink<RE::MenuOpenCloseEvent>,
                     public RE::BSTEventSink<RE::TESContainerChangedEvent>, 
                     public RE::BSTEventSink<RE::InputEvent*>,
                     public RE::BSTEventSink<RE::SpellsLearned::Event> {
-    myEventSink() = default;
-    myEventSink(const myEventSink&) = delete;
-    myEventSink(myEventSink&&) = delete;
-    myEventSink& operator=(const myEventSink&) = delete;
-    myEventSink& operator=(myEventSink&&) = delete;
-
 
     Manager* M = Manager::GetSingleton();
 
-    virtual RE::BSEventNotifyControl ProcessEvent(RE::InputEvent* const* evns, RE::BSTEventSource<RE::InputEvent*>*) override;
-    virtual RE::BSEventNotifyControl ProcessEvent(const RE::TESContainerChangedEvent* event,
+    RE::BSEventNotifyControl ProcessEvent(RE::InputEvent* const* evns, RE::BSTEventSource<RE::InputEvent*>*) override;
+    RE::BSEventNotifyControl ProcessEvent(const RE::TESContainerChangedEvent* event,
                                           RE::BSTEventSource<RE::TESContainerChangedEvent>*) override;
 
-    virtual RE::BSEventNotifyControl ProcessEvent(const RE::MenuOpenCloseEvent* event,
+    RE::BSEventNotifyControl ProcessEvent(const RE::MenuOpenCloseEvent* event,
                                           RE::BSTEventSource<RE::MenuOpenCloseEvent>*) override;
 
-    virtual RE::BSEventNotifyControl ProcessEvent(const RE::SpellsLearned::Event* a_event,
-                                     RE::BSTEventSource<RE::SpellsLearned::Event>*) override;
+    RE::BSEventNotifyControl ProcessEvent(const RE::SpellsLearned::Event* a_event,
+                                          RE::BSTEventSource<RE::SpellsLearned::Event>*) override;
 
-    inline bool IsHotkeyEvent(const RE::BSFixedString& event_name) const;
+    static inline bool IsHotkeyEvent(const RE::BSFixedString& event_name);
 
 public:
-    static myEventSink* GetSingleton() {
-        static myEventSink singleton;
-        return &singleton;
-    }
 
+    void SaveCallback(SKSE::SerializationInterface* serializationInterface) const;
 
-    void SaveCallback(SKSE::SerializationInterface* serializationInterface);
-
-    void LoadCallback(SKSE::SerializationInterface* serializationInterface);
+    void LoadCallback(SKSE::SerializationInterface* serializationInterface) const;
 
 };

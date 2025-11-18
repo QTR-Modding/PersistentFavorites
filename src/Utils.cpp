@@ -40,7 +40,7 @@ namespace Utils {
                 std::vector<std::pair<int, bool>> encodedValues;
                 try {
                     for (int i = 0; i < 100 && inputString[i] != '\0'; i++) {
-                        char ch = inputString[i];
+                        const char ch = inputString[i];
                         if (std::isprint(ch) && (std::isalnum(ch) || std::isspace(ch) || std::ispunct(ch)) && ch >= 0 &&
                             ch <= 255) {
                             encodedValues.push_back(std::make_pair(static_cast<int>(ch), std::isupper(ch)));
@@ -57,7 +57,7 @@ namespace Utils {
                 const std::vector<std::pair<int, bool>>& encodedValues) {
                 std::string decodedString;
                 for (const auto& pair : encodedValues) {
-                    char ch = static_cast<char>(pair.first);
+                    const char ch = static_cast<char>(pair.first);
                     if (std::isalnum(ch) || std::isspace(ch) || std::ispunct(ch)) {
                         if (pair.second) {
                             decodedString += ch;
@@ -77,7 +77,7 @@ namespace Utils {
             }
 
             bool includesString(const std::string& input, const std::vector<std::string>& strings) {
-                std::string lowerInput = toLowercase(input);
+                const std::string lowerInput = toLowercase(input);
 
                 for (const auto& str : strings) {
                     std::string lowerStr = str;
@@ -99,7 +99,7 @@ namespace Utils {
                 auto* form = RE::TESForm::LookupByEditorID(editor_id);
                 if (form) return form;
             }
-            auto form = RE::TESForm::LookupByID(id);
+            const auto form = RE::TESForm::LookupByID(id);
             if (form) return form;
             return nullptr;
         };
@@ -107,7 +107,8 @@ namespace Utils {
         const std::string GetEditorID(const FormID a_formid) {
             if (const auto form = RE::TESForm::LookupByID(a_formid)) {
                 return clib_util::editorID::get_editorID(form);
-            } else return "";
+            }
+            return "";
         }
 
         namespace Menu {
@@ -120,17 +121,17 @@ namespace Utils {
 
             void OpenMenu(const std::string_view menuname){
                 if (IsOpen(menuname)) return;
-				RE::BSFixedString menuName(menuname);
+				const RE::BSFixedString menuName(menuname);
                 if (const auto queue = RE::UIMessageQueue::GetSingleton()) {
                     queue->AddMessage(menuName, RE::UI_MESSAGE_TYPE::kShow, nullptr);
                 };
             };
 
             void CloseMenu(const std::string_view menuname) {
-                if (auto ui = RE::UI::GetSingleton()) {
+                if (const auto ui = RE::UI::GetSingleton()) {
                     if (!ui->IsMenuOpen(menuname)) return;
                 }
-                RE::BSFixedString menuName(menuname);
+                const RE::BSFixedString menuName(menuname);
                 if (const auto queue = RE::UIMessageQueue::GetSingleton()) {
                     queue->AddMessage(menuName, RE::UI_MESSAGE_TYPE::kHide, nullptr);
                 }
@@ -150,13 +151,13 @@ namespace Utils {
                     return 0;
                 }
                 auto inventory = inventory_owner->GetInventory();
-                auto it = inventory.find(item);
-                bool has_entry = it != inventory.end();
+                const auto it = inventory.find(item);
+                const bool has_entry = it != inventory.end();
                 if (nonzero_entry_check) return has_entry && it->second.first > 0;
                 return has_entry;
             }
 
-            const bool HasItem(RE::TESBoundObject* item, RE::TESObjectREFR* item_owner) {
+            bool HasItem(RE::TESBoundObject* item, RE::TESObjectREFR* item_owner) {
                 if (HasItemEntry(item, item_owner, true)) return true;
                 return false;
             }
@@ -164,12 +165,12 @@ namespace Utils {
             void FavoriteItem(RE::TESBoundObject* item, RE::TESObjectREFR* inventory_owner) {
                 if (!item) return;
                 if (!inventory_owner) return;
-                auto inventory_changes = inventory_owner->GetInventoryChanges();
+                const auto inventory_changes = inventory_owner->GetInventoryChanges();
                 if (!inventory_changes) {
 					logger::error("Inventory changes is null");
 					return;
 				}
-                auto entries = inventory_changes->entryList;
+                const auto entries = inventory_changes->entryList;
                 for (auto it = entries->begin(); it != entries->end(); ++it) {
                     if (!(*it)) {
                         logger::error("Item entry is null");
@@ -180,7 +181,7 @@ namespace Utils {
                         logger::error("Object is null");
                         continue;
                     }
-                    auto formid = object->GetFormID();
+                    const auto formid = object->GetFormID();
                     if (!formid) logger::critical("Formid is null");
                     if (formid == item->GetFormID()) {
                         logger::trace("Favoriting item: {}", item->GetName());
@@ -230,7 +231,7 @@ namespace Utils {
                     return false;
                 }
                 auto inventory = inventory_owner->GetInventory();
-                auto it = inventory.find(item);
+                const auto it = inventory.find(item);
                 if (it != inventory.end()) {
                     if (it->second.first <= 0) logger::warn("Item count is 0");
                     return it->second.second->IsFavorited();

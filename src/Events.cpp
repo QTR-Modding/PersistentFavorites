@@ -10,13 +10,12 @@ RE::BSEventNotifyControl myEventSink::ProcessEvent(RE::InputEvent* const* evns, 
         const RE::ButtonEvent* a_event = e->AsButtonEvent();
         if (a_event->IsPressed() || a_event->IsHeld()) continue;
         const RE::IDEvent* id_event = e->AsIDEvent();
-        const auto& userEvent = id_event->userEvent;
-        const auto userevents = RE::UserEvents::GetSingleton();
-        if (IsHotkeyEvent(userEvent) && Utils::FunctionsSkyrim::Menu::IsOpen(RE::FavoritesMenu::MENU_NAME)) {
-            logger::trace("User event: {}", userEvent.c_str());
+        const auto& user_event = id_event->userEvent;
+        const auto user_events = RE::UserEvents::GetSingleton();
+        if (IsHotkeyEvent(user_event) && Utils::FunctionsSkyrim::Menu::IsOpen(RE::FavoritesMenu::MENU_NAME)) {
             M->SyncFavorites();
         }
-        else if (userEvent == userevents->toggleFavorite || userEvent == userevents->yButton){
+        else if (user_event == user_events->toggleFavorite || user_event == user_events->yButton){
             M->SyncFavorites();
         }
         return RE::BSEventNotifyControl::kContinue;
@@ -39,11 +38,11 @@ RE::BSEventNotifyControl myEventSink::ProcessEvent(const RE::MenuOpenCloseEvent*
         event->menuName != RE::InventoryMenu::MENU_NAME &&
         event->menuName != RE::ContainerMenu::MENU_NAME &&
         event->menuName != RE::MagicMenu::MENU_NAME) return RE::BSEventNotifyControl::kContinue;
-    logger::trace("Menu event: {}", event->menuName.c_str());
+    
     M->AddFavorites();
     if (event->opening) {
-        auto player_ref = RE::PlayerCharacter::GetSingleton()->AsReference();
-        SKSE::GetTaskInterface()->AddTask([player_ref]() { RE::SendUIMessage::SendInventoryUpdateMessage(player_ref, nullptr);
+        SKSE::GetTaskInterface()->AddTask([]() { 
+            RE::SendUIMessage::SendInventoryUpdateMessage(RE::PlayerCharacter::GetSingleton(), nullptr);
 		});
     }
     return RE::BSEventNotifyControl::kContinue;
@@ -56,18 +55,18 @@ RE::BSEventNotifyControl myEventSink::ProcessEvent(const RE::SpellsLearned::Even
     return RE::BSEventNotifyControl::kContinue;
 }
 
-bool myEventSink::IsHotkeyEvent(const RE::BSFixedString& event_name) const {
+bool myEventSink::IsHotkeyEvent(const RE::BSFixedString& event_name) {
     return Utils::Functions::String::includesString(std::string(event_name.c_str()), {"Hotkey"});
 };
 
-void myEventSink::SaveCallback(SKSE::SerializationInterface* serializationInterface) {
+void myEventSink::SaveCallback(SKSE::SerializationInterface* serializationInterface) const {
     M->SendData();
     if (!M->Save(serializationInterface, Settings::kDataKey, Settings::kSerializationVersion)) {
         logger::critical("Failed to save Data");
     }
 }
 
-void myEventSink::LoadCallback(SKSE::SerializationInterface* serializationInterface){
+void myEventSink::LoadCallback(SKSE::SerializationInterface* serializationInterface) const {
 
     logger::info("Loading Data from skse co-save.");
 
