@@ -53,7 +53,8 @@ public:
     }
 
     bool AddFavorites();
-    void SyncFavorites();
+    void UpdateFavorite(RE::InventoryEntryData* a_entry_data);
+    void SyncFavorites(bool a_spell_only);
     void FavoriteCheck_Item(FormID formid);
     void FavoriteCheck_Spell();
 

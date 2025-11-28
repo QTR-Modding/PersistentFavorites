@@ -336,6 +336,20 @@ bool Manager::AddFavorites() {
     return added_1 || added_2;
 }
 
+void Manager::UpdateFavorite(RE::InventoryEntryData* a_entry_data) {
+    std::unique_lock lock(mutex_);
+#undef GetObject
+    if (const auto a_object = a_entry_data->GetObject()) {
+        const auto formid = a_object->GetFormID();
+        if (a_entry_data->IsFavorited()) {
+            if (favorites.insert(formid).second) {
+            }
+            UpdateHotkeyMap(formid, a_entry_data);
+        } else if (RemoveFavorite(formid)) {
+        }
+    }
+}
+
 void Manager::SyncFavorites_Item() {
     const auto player_inventory = RE::PlayerCharacter::GetSingleton()->GetInventory();
     for (const auto& [fst, snd] : player_inventory) {
@@ -375,10 +389,11 @@ void Manager::SyncFavorites_Spell() {
     temp_all_spells.clear();
 };
 
-void Manager::SyncFavorites() {
+void Manager::SyncFavorites(bool a_spell_only) {
     std::unique_lock lock(mutex_);
-    SyncFavorites_Item();
     SyncFavorites_Spell();
+    if (a_spell_only) return;
+    SyncFavorites_Item();
 }
 
 void Manager::FavoriteCheck_Item(const FormID formid) {

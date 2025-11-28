@@ -12,6 +12,7 @@ namespace Utils {
     std::string DecodeTypeCode(std::uint32_t typeCode);
 
     bool FavoriteItem(RE::InventoryChanges* a_owner, FormID a_itemID);
+    RE::InventoryEntryData* GetSelectedEntryInMenu();
 
     namespace MsgBoxesNotifs {
         namespace Windows {
