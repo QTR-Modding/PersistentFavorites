@@ -143,7 +143,7 @@ void LoadCallback(SKSE::SerializationInterface* serializationInterface) {
 }
 
 void InitializeSerialization() {
-    auto serialization = SKSE::GetSerializationInterface();
+    const auto serialization = SKSE::GetSerializationInterface();
     serialization->SetUniqueID(Settings::kDataKey);
     serialization->SetSaveCallback(SaveCallback);
     serialization->SetLoadCallback(LoadCallback);

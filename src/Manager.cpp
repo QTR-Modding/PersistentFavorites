@@ -58,6 +58,8 @@ int Manager::GetHotkey(const RE::InventoryEntryData* a_entry) const {
     for (const auto& extraList : *a_entry->extraLists) {
         if (!extraList) continue;
         if (extraList->HasType(RE::ExtraDataType::kHotkey)) {
+            const auto extra_hotkey = extraList->GetByType<RE::ExtraHotkey>();
+            if (!extra_hotkey) continue;
             const auto hotkey = extraList->GetByType<RE::ExtraHotkey>()->hotkey.underlying();
             if (!IsHotkeyValid(hotkey)) continue;
             return hotkey;
@@ -192,8 +194,9 @@ void Manager::ApplyHotkey(const FormID formid) {
         return;
     }
     if (xList->HasType(RE::ExtraDataType::kHotkey)) {
-        auto* old_xHotkey = xList->GetByType<RE::ExtraHotkey>();
-        old_xHotkey->hotkey = static_cast<RE::ExtraHotkey::Hotkey>(hotkey);
+        if (const auto old_xHotkey = xList->GetByType<RE::ExtraHotkey>()) {
+            old_xHotkey->hotkey = static_cast<RE::ExtraHotkey::Hotkey>(hotkey);
+        }
     } else {
         RE::ExtraHotkey* xHotkey = RE::ExtraHotkey::Create<RE::ExtraHotkey>();
         if (!xHotkey) {

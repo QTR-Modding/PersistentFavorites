@@ -14,7 +14,7 @@ namespace {
                 Utils::MsgBoxesNotifs::Windows::Po3ErrMsg();
                 return;
             }
-            auto eventSink = EventSink::GetSingleton();
+            const auto eventSink = EventSink::GetSingleton();
             RE::BSInputDeviceManager::GetSingleton()->AddEventSink(eventSink);
             auto* eventSourceHolder = RE::ScriptEventSourceHolder::GetSingleton();
             eventSourceHolder->AddEventSink<RE::TESContainerChangedEvent>(eventSink);

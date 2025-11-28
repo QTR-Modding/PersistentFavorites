@@ -3,7 +3,7 @@
 #undef GetObject
 
 namespace Utils {
-    std::string DecodeTypeCode(std::uint32_t typeCode) {
+    std::string DecodeTypeCode(const std::uint32_t typeCode) {
         char buf[4];
         buf[3] = static_cast<char>(typeCode);
         buf[2] = static_cast<char>(typeCode >> 8);
@@ -21,9 +21,13 @@ namespace Utils {
         };
     };
 
-    bool FavoriteItem(RE::InventoryChanges* a_owner, FormID a_itemID) {
+    bool FavoriteItem(RE::InventoryChanges* a_owner, const FormID a_itemID) {
         
         const auto& entries = a_owner->entryList;
+        if (!entries) {
+            logger::error("Owner's entry list is null");
+            return false;
+        }
         for (auto it = entries->begin(); it != entries->end(); ++it) {
             const auto inv_entry = *it;
             if (!inv_entry) {
