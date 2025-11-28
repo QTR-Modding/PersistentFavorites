@@ -48,6 +48,7 @@ add_subdirectory("$ENV{COMMONLIB_SSE_FOLDER}" ${CMAKE_CURRENT_BINARY_DIR}/_deps/
 get_target_property(COMMONLIB_SRC_DIR CommonLibSSE SOURCE_DIR)
 
 find_path(CLIB_UTIL_INCLUDE_DIRS "ClibUtil/utils.hpp")
+find_path(ClibUtilsQTR_INCLUDE_DIRS "ClibUtilsQTR/utils.hpp")
 
 file(
   GLOB_RECURSE
@@ -75,6 +76,7 @@ target_include_directories(
 	${PROJECT_NAME}
 	PRIVATE
 	${CLIB_UTIL_INCLUDE_DIRS}
+    ${ClibUtilsQTR_INCLUDE_DIRS}
 	${CMAKE_CURRENT_SOURCE_DIR}/include
 )
 
@@ -84,7 +86,7 @@ if (MSVC)
 
   # If you really want MSVC to warn on truly unused (internal-linkage) functions (C4505),
   # enable /Wall. It is very noisy, so consider disabling a few chatty warnings.
-  # target_compile_options(${PROJECT_NAME} PRIVATE /Wall
+  #target_compile_options(${PROJECT_NAME} PRIVATE /Wall
   #   /wd4514 /wd4710 /wd4711 /wd4820 /wd5045)
 
 elseif (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")

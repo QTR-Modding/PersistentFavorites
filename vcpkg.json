@@ -9,7 +9,8 @@
     "xbyak",
     "rapidcsv",
     "directxtk",
-    "clib-util"
+    "clib-util",
+    "clib-utils-qtr"
   ],
   "overrides": [
     {

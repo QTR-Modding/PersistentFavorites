@@ -3,5 +3,6 @@ set(sources ${sources}
 	src/plugin.cpp
 	src/Utils.cpp
 	src/Manager.cpp
-	Serialization.cpp
+	src/Serialization.cpp
+	src/Hooks.cpp
 )
