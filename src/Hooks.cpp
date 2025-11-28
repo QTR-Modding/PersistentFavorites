@@ -5,7 +5,7 @@ void Hooks::Install() {
     MenuHook<RE::ContainerMenu>::InstallHook(RE::VTABLE_ContainerMenu[0]);
     MenuHook<RE::InventoryMenu>::InstallHook(RE::VTABLE_InventoryMenu[0]);
     MenuHook<RE::FavoritesMenu>::InstallHook(RE::VTABLE_FavoritesMenu[0]);
-    MenuHook<RE::FavoritesMenu>::InstallHook(RE::VTABLE_MagicMenu[0]);
+    MenuHook<RE::MagicMenu>::InstallHook(RE::VTABLE_MagicMenu[0]);
 }
 
 bool Hooks::IsAnyMenuOpen() {
