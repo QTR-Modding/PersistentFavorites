@@ -22,7 +22,6 @@ namespace Utils {
     };
 
     bool FavoriteItem(RE::InventoryChanges* a_owner, const FormID a_itemID) {
-        
         const auto& entries = a_owner->entryList;
         if (!entries) {
             logger::error("Owner's entry list is null");
@@ -34,10 +33,15 @@ namespace Utils {
                 logger::error("Item entry is null");
                 continue;
             }
-            if (const auto object = inv_entry->GetObject(); object && object->GetFormID() == a_itemID) {
-                a_owner->SetFavorite(inv_entry, nullptr);
+            const auto a_object = inv_entry->GetObject();
+            if (!a_object) continue;
+            if (a_object->GetFormID() != a_itemID) continue;
+
+            if (inv_entry->IsFavorited()) {
                 return true;
             }
+            a_owner->SetFavorite(inv_entry, nullptr);
+            return true;
         }
         return false;
     }

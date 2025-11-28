@@ -60,7 +60,7 @@ int Manager::GetHotkey(const RE::InventoryEntryData* a_entry) const {
         if (extraList->HasType(RE::ExtraDataType::kHotkey)) {
             const auto extra_hotkey = extraList->GetByType<RE::ExtraHotkey>();
             if (!extra_hotkey) continue;
-            const auto hotkey = extraList->GetByType<RE::ExtraHotkey>()->hotkey.underlying();
+            const auto hotkey = extra_hotkey->hotkey.underlying();
             if (!IsHotkeyValid(hotkey)) continue;
             return hotkey;
         }
@@ -91,7 +91,8 @@ std::map<int, FormID> Manager::GetInventoryHotkeys() const {
     for (auto& item : player_inventory) {
         if (!item.first) continue;
         if (item.second.first <= 0) continue;
-        if (std::strlen(item.first->GetName()) == 0) continue;
+        const char* name = item.first->GetName();
+        if (!name || name[0] == '\0') continue;
         if (!item.second.second) continue;
         if (!item.second.second->extraLists || item.second.second->extraLists->empty()) continue;
         if (!item.second.second->IsFavorited()) continue;
@@ -223,7 +224,8 @@ void Manager::SyncHotkeys_Item() {
     for (auto& item : player_inventory) {
         if (!item.first) continue;
         if (item.second.first <= 0) continue;
-        if (std::strlen(item.first->GetName()) == 0) continue;
+        const char* name = item.first->GetName();
+        if (!name || name[0] == '\0') continue;
         if (!item.second.second) continue;
         if (!item.second.second->extraLists || item.second.second->extraLists->empty()) continue;
         if (!item.second.second->IsFavorited()) continue;
@@ -236,7 +238,8 @@ void Manager::SyncHotkeys_Spell() {
     const auto mg_hotkeys = GetMagicHotkeys();
     for (auto& spell : mg_favorites) {
         if (!spell) continue;
-        if (std::strlen(spell->GetName()) == 0) continue;
+        const char* name = spell->GetName();
+        if (!name || name[0] == '\0') continue;
         if (!mg_hotkeys.contains(spell->GetFormID())) continue;
         const auto spell_formid = spell->GetFormID();
         UpdateHotkeyMap(spell_formid, mg_hotkeys.at(spell_formid));
@@ -251,7 +254,8 @@ void Manager::SyncHotkeys() {
 
 RE::BSContainer::ForEachResult Manager::Visit(RE::SpellItem* a_spell) {
     if (!a_spell || !a_spell->GetPlayable()) return RE::BSContainer::ForEachResult::kContinue;
-    if (std::strlen(a_spell->GetName()) == 0) return RE::BSContainer::ForEachResult::kContinue;
+    const char* spell_name = a_spell->GetName();
+    if (!spell_name || spell_name[0] == '\0') return RE::BSContainer::ForEachResult::kContinue;
     temp_all_spells.insert(a_spell->GetFormID());
     return RE::BSContainer::ForEachResult::kContinue;
 }
@@ -278,7 +282,8 @@ bool Manager::AddFavorites_Item() {
         if (!fst) continue;
         if (snd.first <= 0) continue;
         if (!fst->GetPlayable()) continue;
-        if (std::strlen(fst->GetName()) == 0) continue;
+        const char* name = fst->GetName();
+        if (!name || name[0] == '\0') continue;
         if (!snd.second.get()) continue;
         const auto a_formid = fst->GetFormID();
         if (snd.second->IsFavorited()) {
@@ -337,7 +342,8 @@ void Manager::SyncFavorites_Item() {
         if (!fst) continue;
         if (snd.first <= 0) continue;
         if (!fst->GetPlayable()) continue;
-        if (std::strlen(fst->GetName()) == 0) continue;
+        const char* name = fst->GetName();
+        if (!name || name[0] == '\0') continue;
         if (!snd.second) continue;
         if (snd.second->IsFavorited()) {
             if (favorites.insert(fst->GetFormID()).second) {
