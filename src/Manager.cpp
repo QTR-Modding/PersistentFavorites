@@ -473,7 +473,7 @@ void Manager::SendData() {
 void Manager::ReceiveData() {
     logger::info("--------Receiving data---------");
     if (m_Data.empty()) {
-        logger::warn("ReceiveData: No data to receive.");
+        logger::info("ReceiveData: No data to receive.");
         return;
     }
 
@@ -489,18 +489,18 @@ void Manager::ReceiveData() {
         }
         const auto source_form = FormReader::GetFormByID(0, source_editorid);
         if (!source_form) {
-            logger::critical("ReceiveData: Source form not found. Saved formid: {}, editorid: {}", source_formid,
+            logger::critical("ReceiveData: Source form not found. Saved formid: {:x}, editorid: {}", source_formid,
                              source_editorid);
             continue;
         }
         if (source_form->GetFormID() != source_formid) {
-            logger::warn("ReceiveData: Source formid does not match. Saved formid: {}, editorid: {}", source_formid,
+            logger::warn("ReceiveData: Source formid does not match. Saved formid: {:x}, editorid: {}", source_formid,
                          source_editorid);
             source_formid = source_form->GetFormID();
         }
 
         if (favorites.contains(source_formid)) {
-            logger::warn("ReceiveData: Form already favorited. FormID: {}, EditorID: {}", source_formid,
+            logger::warn("ReceiveData: Form already favorited. FormID: {:x}, EditorID: {}", source_formid,
                          source_editorid);
             continue;
         }
