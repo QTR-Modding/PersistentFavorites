@@ -400,7 +400,10 @@ void Manager::FavoriteCheck_Item(const FormID formid) {
     std::unique_lock lock(mutex_);
     if (!favorites.contains(formid)) return;
     if (const auto inv_changes = RE::PlayerCharacter::GetSingleton()->GetInventoryChanges()) {
-        Utils::FavoriteItem(inv_changes, formid);
+        if (!Utils::FavoriteItem(inv_changes, formid)) {
+            logger::warn("FavoriteCheck_Item: Failed to favorite item. FormID: {:x}", formid);
+            return;
+        }
         ApplyHotkey(formid);
     }
 }

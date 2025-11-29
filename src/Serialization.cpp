@@ -141,7 +141,7 @@ void LoadCallback(SKSE::SerializationInterface* serializationInterface) {
     if (cosave_found) {
         std::ostringstream oss;
         oss << std::fixed << std::setprecision(1) << static_cast<float>(received_version) / 10.f;
-        logger::info("Receiving Data from cosave with plugin version: {}.", oss.str());
+        logger::info("Receiving Data from cosave with serialization version: {}.", oss.str());
         M->ReceiveData();
         logger::info("Data loaded from skse co-save.");
     } else

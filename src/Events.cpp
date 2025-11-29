@@ -31,8 +31,14 @@ RE::BSEventNotifyControl EventSink::ProcessEvent(RE::InputEvent* const* evns, RE
                 if (Hooks::IsMenuOpen(3)) {
                     // magic menu
                     Manager::GetSingleton()->SyncFavorites(true);
-                } else if (const auto selectedItem = Utils::GetSelectedEntryInMenu()) {
+                } 
+                else if (REL::Module::IsVR()) {
+                    Manager::GetSingleton()->SyncFavorites(false);
+                } 
+                else if (const auto selectedItem = Utils::GetSelectedEntryInMenu()) {
                     Manager::GetSingleton()->UpdateFavorite(selectedItem);
+                } else {
+                    logger::warn("No selected item in menu for favorite toggle event: {}", user_event.c_str());
                 }
                 return RE::BSEventNotifyControl::kContinue;
             }
