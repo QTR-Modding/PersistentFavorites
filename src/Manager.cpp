@@ -250,8 +250,9 @@ void Manager::SyncHotkeys() {
 
 RE::BSContainer::ForEachResult Manager::Visit(RE::SpellItem* a_spell) {
     if (!a_spell || !a_spell->GetPlayable()) return RE::BSContainer::ForEachResult::kContinue;
-    if (const char* spell_name = a_spell->GetName(); !spell_name || spell_name[0] == '\0') return
-        RE::BSContainer::ForEachResult::kContinue;
+    if (const char* spell_name = a_spell->GetName(); !spell_name || spell_name[0] == '\0') {
+        return RE::BSContainer::ForEachResult::kContinue;
+    }
     temp_all_spells.insert(a_spell->GetFormID());
     return RE::BSContainer::ForEachResult::kContinue;
 }
