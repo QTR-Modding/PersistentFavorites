@@ -422,6 +422,21 @@ void Manager::FavoriteCheck_Spell() {
     temp_all_spells.clear();
 }
 
+// ReSharper disable once CppParameterMayBeConstPtrOrRef
+void Manager::UpdateFavorite(RE::TESBoundObject* a_item) {
+    const auto formid = a_item->GetFormID();
+    {
+        std::shared_lock lock(mutex_);
+        if (!favorites.contains(formid)) return;
+    }
+    const auto player_inv = RE::PlayerCharacter::GetSingleton()->GetInventory();
+    const auto it = player_inv.find(a_item);
+    if (it != player_inv.end() && !it->second.second->IsFavorited()) {
+        std::unique_lock lock(mutex_);
+        RemoveFavorite(formid);
+    }
+}
+
 void Manager::Reset() {
     logger::info("Resetting manager...");
     std::unique_lock lock(mutex_);

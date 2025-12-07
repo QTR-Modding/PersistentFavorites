@@ -55,6 +55,7 @@ public:
     void SyncFavorites();
     void FavoriteCheck_Item(FormID formid);
     void FavoriteCheck_Spell();
+    void UpdateFavorite(RE::TESBoundObject* a_item);
 
     void Reset();
     void SendData();
