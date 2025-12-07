@@ -250,7 +250,9 @@ void Manager::SyncHotkeys() {
 
 RE::BSContainer::ForEachResult Manager::Visit(RE::SpellItem* a_spell) {
     if (!a_spell || !a_spell->GetPlayable()) return RE::BSContainer::ForEachResult::kContinue;
-    if (const char* spell_name = a_spell->GetName(); !spell_name || spell_name[0] == '\0') return RE::BSContainer::ForEachResult::kContinue;
+    if (const char* spell_name = a_spell->GetName(); !spell_name || spell_name[0] == '\0') {
+        return RE::BSContainer::ForEachResult::kContinue;
+    }
     temp_all_spells.insert(a_spell->GetFormID());
     return RE::BSContainer::ForEachResult::kContinue;
 }
@@ -286,7 +288,9 @@ bool Manager::AddFavorites_Item() {
             }
             UpdateHotkeyMap(a_formid, snd.second.get());
         } else if (favorites.contains(a_formid)) {
-            const auto xList = snd.second->extraLists && !snd.second->extraLists->empty() ? snd.second->extraLists->front() : nullptr;
+            const auto xList = snd.second->extraLists && !snd.second->extraLists->empty()
+                                   ? snd.second->extraLists->front()
+                                   : nullptr;
             inv_changes->SetFavorite(snd.second.get(), xList);
             favorited_any = true;
             ApplyHotkey(a_formid, player_inventory);
@@ -333,20 +337,6 @@ bool Manager::AddFavorites() {
     return added_1 || added_2;
 }
 
-void Manager::UpdateFavorite(RE::InventoryEntryData* a_entry_data) {
-    std::unique_lock lock(mutex_);
-#undef GetObject
-    if (const auto a_object = a_entry_data->GetObject()) {
-        const auto formid = a_object->GetFormID();
-        if (a_entry_data->IsFavorited()) {
-            if (favorites.insert(formid).second) {
-            }
-            UpdateHotkeyMap(formid, a_entry_data);
-        } else if (RemoveFavorite(formid)) {
-        }
-    }
-}
-
 void Manager::SyncFavorites_Item() {
     const auto player_inventory = RE::PlayerCharacter::GetSingleton()->GetInventory();
     for (const auto& [fst, snd] : player_inventory) {
@@ -386,10 +376,9 @@ void Manager::SyncFavorites_Spell() {
     temp_all_spells.clear();
 };
 
-void Manager::SyncFavorites(bool a_spell_only) {
+void Manager::SyncFavorites() {
     std::unique_lock lock(mutex_);
     SyncFavorites_Spell();
-    if (a_spell_only) return;
     SyncFavorites_Item();
 }
 

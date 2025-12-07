@@ -3,11 +3,6 @@
 namespace Hooks {
     void Install();
 
-    inline std::array menu_open = {false, false, false, false}; // Container, Inventory, Favorites, Magic
-    size_t GetMenuID(const RE::BSFixedString& menuName);
-    bool IsAnyMenuOpen();
-    inline bool IsMenuOpen(const size_t a_index) { return menu_open[a_index]; }
-
     template <typename MenuType>
     class MenuHook : public MenuType {
         using ProcessMessage_t = decltype(&MenuType::ProcessMessage);

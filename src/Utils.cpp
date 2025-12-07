@@ -30,41 +30,14 @@ namespace Utils {
                     if (entry->IsFavorited()) {
                         return true;
                     }
-                    const auto extralist = entry->extraLists && !entry->extraLists->empty() ? entry->extraLists->front() : nullptr;
+                    const auto extralist = entry->extraLists && !entry->extraLists->empty()
+                                               ? entry->extraLists->front()
+                                               : nullptr;
                     invChanges->SetFavorite(entry.get(), extralist);
                     return true;
                 }
             }
         }
         return false;
-    }
-
-    RE::InventoryEntryData* GetSelectedEntryInMenu() {
-        if (const auto ui = RE::UI::GetSingleton()) {
-            if (const auto menu_c = ui->GetMenu<RE::ContainerMenu>()) {
-                if (const auto a_itemList = menu_c->GetRuntimeData().itemList) {
-                    if (const auto item = a_itemList->GetSelectedItem()) {
-                        return item->data.objDesc;
-                    }
-                }
-            } else if (const auto menu_i = ui->GetMenu<RE::InventoryMenu>()) {
-                if (const auto a_itemList = menu_i->GetRuntimeData().itemList) {
-                    if (const auto item = a_itemList->GetSelectedItem()) {
-                        return item->data.objDesc;
-                    }
-                }
-            } else if (const auto menu_f = ui->GetMenu<RE::FavoritesMenu>()) {
-                RE::GFxValue selectedIndex;
-                const auto& runtime_data = menu_f->GetRuntimeData();
-                if (runtime_data.root.GetMember("selectedIndex", &selectedIndex) && selectedIndex.IsNumber()) {
-                    const std::int32_t selected_index = static_cast<std::int32_t>(selectedIndex.GetNumber());
-                    const auto& items = runtime_data.favorites;
-                    if (selected_index >= 0 && static_cast<uint32_t>(selected_index) < items.size()) {
-                        return items[selected_index].entryData;
-                    }
-                }
-            }
-        }
-        return nullptr;
     }
 };

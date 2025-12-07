@@ -10,7 +10,6 @@ protected:
     ~SaveLoadData() = default;
 
 public:
-
     [[nodiscard]] bool Save(SKSE::SerializationInterface* serializationInterface) override;
 
     [[nodiscard]] bool Save(SKSE::SerializationInterface* serializationInterface, std::uint32_t type,
