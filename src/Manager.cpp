@@ -146,7 +146,7 @@ FormID Manager::HotkeyIsInUse(const FormID formid, const int a_hotkey) const {
     return formid;
 }
 
-void Manager::ApplyHotkey(const FormID formid, const RE::TESObjectREFR::InventoryItemMap& inv) {
+void Manager::ApplyHotkey(const FormID formid) {
     if (!formid) return;
     if (!favorites.contains(formid)) {
         return;
@@ -179,6 +179,8 @@ void Manager::ApplyHotkey(const FormID formid, const RE::TESObjectREFR::Inventor
         logger::error("ApplyHotkey: Form not found. FormID: {:x}", formid);
         return;
     }
+    const auto inv = RE::PlayerCharacter::GetSingleton()->GetInventory(
+        [bound](RE::TESBoundObject& object) { return &object == bound; });
     const auto item = inv.find(bound);
     if (item == inv.end()) {
         return;
@@ -293,7 +295,7 @@ bool Manager::AddFavorites_Item() {
                                    : nullptr;
             inv_changes->SetFavorite(snd.second.get(), xList);
             favorited_any = true;
-            ApplyHotkey(a_formid, player_inventory);
+            ApplyHotkey(a_formid);
         }
     }
 
@@ -321,7 +323,7 @@ bool Manager::AddFavorites_Spell() {
             if (hotkeyed_spells.contains(spell_formid)) UpdateHotkeyMap(spell_formid, hotkeyed_spells.at(spell_formid));
         } else if (favorites.contains(spell_formid)) {
             mg_favorites->SetFavorite(spell);
-            ApplyHotkey(spell_formid, {});
+            ApplyHotkey(spell_formid);
             favorited_any = true;
         }
     }
@@ -391,7 +393,7 @@ void Manager::FavoriteCheck_Item(const FormID formid) {
             logger::warn("FavoriteCheck_Item: Failed to favorite item. FormID: {:x}", formid);
             return;
         }
-        ApplyHotkey(formid, player_inv);
+        ApplyHotkey(formid);
     }
 }
 
@@ -406,7 +408,7 @@ void Manager::FavoriteCheck_Spell(const FormID formid) {
         return;
     }
     RE::MagicFavorites::GetSingleton()->SetFavorite(spell);
-    ApplyHotkey(formid, {});
+    ApplyHotkey(formid);
 }
 
 void Manager::CleanseMagicFavorites() {

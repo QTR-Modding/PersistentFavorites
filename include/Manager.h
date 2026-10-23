@@ -31,7 +31,7 @@ class Manager final :
 
     [[nodiscard]] FormID HotkeyIsInUse(FormID, int a_hotkey) const;
 
-    void ApplyHotkey(FormID formid, const RE::TESObjectREFR::InventoryItemMap& inv);
+    void ApplyHotkey(FormID formid);
 
     void SyncHotkeys_Item();
 
