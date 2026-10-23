@@ -83,6 +83,8 @@ target_include_directories(
 if (MSVC)
   # Good default
   target_compile_options(${PROJECT_NAME} PRIVATE /W4)
+  target_link_options(${PROJECT_NAME} PRIVATE
+    "$<$<CONFIG:RelWithDebInfo>:/OPT:REF;/OPT:ICF;/INCREMENTAL:NO>")
 
   # If you really want MSVC to warn on truly unused (internal-linkage) functions (C4505),
   # enable /Wall. It is very noisy, so consider disabling a few chatty warnings.
