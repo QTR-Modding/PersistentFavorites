@@ -1,6 +1,6 @@
 
-if(NOT EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/extern/CommonLibSSE/CMakeLists.txt")
-  message(FATAL_ERROR "Initialize CommonLibVR-MIT with git submodule update --init --recursive")
+if(NOT DEFINED ENV{COMMONLIB_SSE_FOLDER})
+  message(FATAL_ERROR "Missing COMMONLIB_SSE_FOLDER environment variable")
 endif()
 
 include(cmake/headerlist.cmake)
@@ -44,7 +44,7 @@ set(ENABLE_SKYRIM_AE ON CACHE BOOL " " FORCE)
 set(ENABLE_SKYRIM_VR ON CACHE BOOL " " FORCE)
 set(BUILD_TESTS OFF CACHE BOOL " " FORCE)
 
-add_subdirectory(extern/CommonLibSSE ${CMAKE_CURRENT_BINARY_DIR}/_deps/clib-build)
+add_subdirectory("$ENV{COMMONLIB_SSE_FOLDER}" ${CMAKE_CURRENT_BINARY_DIR}/_deps/clib-build)
 get_target_property(COMMONLIB_SRC_DIR CommonLibSSE SOURCE_DIR)
 
 find_path(CLIB_UTIL_INCLUDE_DIRS "ClibUtil/utils.hpp")
