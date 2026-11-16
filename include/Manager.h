@@ -23,7 +23,7 @@ class Manager final :
     [[nodiscard]] bool IsHotkeyValid(int hotkey) const;
 
     void UpdateHotkeyMap(FormID item_formid, const RE::InventoryEntryData* a_entry);
-    void UpdateHotkeyMap(FormID formid, int hotkey);
+    void UpdateHotkeyMap(FormID formid, int a_hotkey);
 
     [[nodiscard]] std::map<int, FormID> GetInventoryHotkeys() const;
     [[nodiscard]] std::map<FormID, int> GetMagicHotkeys() const;

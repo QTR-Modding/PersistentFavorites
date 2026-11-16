@@ -79,9 +79,9 @@ void Manager::UpdateHotkeyMap(const FormID item_formid, const RE::InventoryEntry
     }
 }
 
-void Manager::UpdateHotkeyMap(const FormID formid, const int hotkey) {
-    if (IsHotkeyValid(hotkey)) {
-        hotkey_map[formid] = hotkey;
+void Manager::UpdateHotkeyMap(const FormID formid, const int a_hotkey) {
+    if (IsHotkeyValid(a_hotkey)) {
+        hotkey_map[formid] = a_hotkey;
     } else {
         hotkey_map.erase(formid);
     }
