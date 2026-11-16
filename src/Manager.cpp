@@ -68,20 +68,22 @@ int Manager::GetHotkey(const RE::InventoryEntryData* a_entry) const {
     return -1;
 }
 
+int Manager::GetHotkey(const FormID a_formid, const std::map<FormID, int>& a_hotkeys) {
+    if (const auto a_hotkey_entry = a_hotkeys.find(a_formid); a_hotkey_entry != a_hotkeys.end()) {
+        return a_hotkey_entry->second;
+    }
+    return static_cast<int>(RE::ExtraHotkey::Hotkey::kUnbound);
+}
+
 inline bool Manager::IsHotkeyValid(const int hotkey) const {
     return allowed_hotkeys.contains(hotkey);
 }
 
-void Manager::UpdateHotkeyMap(const FormID item_formid, const RE::InventoryEntryData* a_entry) {
-    const auto hotkey = GetHotkey(a_entry);
-    if (IsHotkeyValid(hotkey)) {
-        hotkey_map[item_formid] = hotkey;
-    }
-}
-
-void Manager::UpdateHotkeyMap(const FormID spell_formid, const int a_hotkey) {
+void Manager::UpdateHotkeyMap(const FormID a_formid, const int a_hotkey) {
     if (IsHotkeyValid(a_hotkey)) {
-        hotkey_map[spell_formid] = a_hotkey;
+        hotkey_map[a_formid] = a_hotkey;
+    } else {
+        hotkey_map.erase(a_formid);
     }
 }
 
@@ -228,7 +230,7 @@ void Manager::SyncHotkeys_Item() {
         if (!snd.second) continue;
         if (!snd.second->extraLists || snd.second->extraLists->empty()) continue;
         if (!snd.second->IsFavorited()) continue;
-        UpdateHotkeyMap(fst->GetFormID(), snd.second.get());
+        UpdateHotkeyMap(fst->GetFormID(), GetHotkey(snd.second.get()));
     }
 }
 
@@ -238,9 +240,8 @@ void Manager::SyncHotkeys_Spell() {
     for (auto& spell : mg_favorites) {
         if (!spell) continue;
         if (const char* name = spell->GetName(); !name || name[0] == '\0') continue;
-        if (!mg_hotkeys.contains(spell->GetFormID())) continue;
         const auto spell_formid = spell->GetFormID();
-        UpdateHotkeyMap(spell_formid, mg_hotkeys.at(spell_formid));
+        UpdateHotkeyMap(spell_formid, GetHotkey(spell_formid, mg_hotkeys));
     }
 }
 
@@ -288,7 +289,7 @@ bool Manager::AddFavorites_Item() {
         if (snd.second->IsFavorited()) {
             if (favorites.insert(a_formid).second) {
             }
-            UpdateHotkeyMap(a_formid, snd.second.get());
+            UpdateHotkeyMap(a_formid, GetHotkey(snd.second.get()));
         } else if (favorites.contains(a_formid)) {
             const auto xList = snd.second->extraLists && !snd.second->extraLists->empty()
                                    ? snd.second->extraLists->front()
@@ -320,7 +321,7 @@ bool Manager::AddFavorites_Spell() {
         if (IsSpellFavorited(spell_formid, favorited_spells)) {
             if (favorites.insert(spell_formid).second) {
             }
-            if (hotkeyed_spells.contains(spell_formid)) UpdateHotkeyMap(spell_formid, hotkeyed_spells.at(spell_formid));
+            UpdateHotkeyMap(spell_formid, GetHotkey(spell_formid, hotkeyed_spells));
         } else if (favorites.contains(spell_formid)) {
             mg_favorites->SetFavorite(spell);
             ApplyHotkey(spell_formid);
@@ -352,11 +353,7 @@ void Manager::SyncFavorites_Item() {
             const auto a_formid = fst->GetFormID();
             if (favorites.insert(a_formid).second) {
             }
-            if (const auto a_hotkey = GetHotkey(snd.second.get()); IsHotkeyValid(a_hotkey)) {
-                hotkey_map[a_formid] = a_hotkey;
-            } else {
-                hotkey_map.erase(a_formid);
-            }
+            UpdateHotkeyMap(a_formid, GetHotkey(snd.second.get()));
         } else if (RemoveFavorite(fst->GetFormID())) {
         }
     }
@@ -376,11 +373,7 @@ void Manager::SyncFavorites_Spell() {
         if (IsSpellFavorited(spell_formid, favorited_spells)) {
             if (favorites.insert(spell_formid).second) {
             }
-            if (const auto a_hotkey_entry = hotkeyed_spells.find(spell_formid); a_hotkey_entry != hotkeyed_spells.end()) {
-                hotkey_map[spell_formid] = a_hotkey_entry->second;
-            } else {
-                hotkey_map.erase(spell_formid);
-            }
+            UpdateHotkeyMap(spell_formid, GetHotkey(spell_formid, hotkeyed_spells));
         } else if (RemoveFavorite(spell_formid)) {
         }
     }
