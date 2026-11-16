@@ -103,12 +103,13 @@ std::map<int, FormID> Manager::GetInventoryHotkeys() const {
     return hotkeys_in_use;
 }
 
-std::map<FormID, int> Manager::GetMagicHotkeys() const {
+std::map<FormID, int> Manager::GetMagicHotkeys(
+    const std::unordered_set<RE::TESForm*>* unregistered) const {
     std::map<FormID, int> hotkeys_in_use;
     const auto& mg_hotkeys = RE::MagicFavorites::GetSingleton()->hotkeys;
     int index = 0;
     for (auto& hotkeyed_spell : mg_hotkeys) {
-        if (!hotkeyed_spell) {
+        if (!hotkeyed_spell || (unregistered && unregistered->contains(hotkeyed_spell))) {
             index++;
             continue;
         }
@@ -233,10 +234,13 @@ void Manager::SyncHotkeys_Item() {
 }
 
 void Manager::SyncHotkeys_Spell() {
-    const auto& mg_favorites = RE::MagicFavorites::GetSingleton()->spells;
-    const auto mg_hotkeys = GetMagicHotkeys();
-    for (auto& spell : mg_favorites) {
-        if (!spell) continue;
+    const auto magicFavorites = RE::MagicFavorites::GetSingleton();
+    const auto unregistered = Utils::FindUnregisteredMagicFavorites(magicFavorites);
+    const auto mg_hotkeys = GetMagicHotkeys(&unregistered);
+    for (const auto spell : magicFavorites->spells) {
+        if (!spell || unregistered.contains(spell)) {
+            continue;
+        }
         if (const char* name = spell->GetName(); !name || name[0] == '\0') continue;
         if (!mg_hotkeys.contains(spell->GetFormID())) continue;
         const auto spell_formid = spell->GetFormID();
@@ -413,9 +417,10 @@ void Manager::FavoriteCheck_Spell(const FormID formid) {
 
 void Manager::CleanseMagicFavorites() {
     const auto magic_favorites = RE::MagicFavorites::GetSingleton();
+    const auto unregistered = Utils::FindUnregisteredMagicFavorites(magic_favorites);
     std::vector<RE::TESForm*> problematic_favs;
     for (const auto& spell : magic_favorites->spells) {
-        if (!spell || Utils::IsMagicMenuItem(spell)) {
+        if (!spell || unregistered.contains(spell) || Utils::IsMagicMenuItem(spell)) {
             continue;
         }
         const auto form_type = spell->GetFormType();
@@ -426,7 +431,7 @@ void Manager::CleanseMagicFavorites() {
                      RE::FormTypeToString(form_type), name);
     }
     for (const auto& hotkey : magic_favorites->hotkeys) {
-        if (!hotkey || Utils::IsMagicMenuItem(hotkey)) {
+        if (!hotkey || unregistered.contains(hotkey) || Utils::IsMagicMenuItem(hotkey)) {
             continue;
         }
         const auto form_type = hotkey->GetFormType();

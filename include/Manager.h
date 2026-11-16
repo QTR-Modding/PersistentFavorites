@@ -26,7 +26,8 @@ class Manager final :
     void UpdateHotkeyMap(FormID spell_formid, int a_hotkey);
 
     [[nodiscard]] std::map<int, FormID> GetInventoryHotkeys() const;
-    [[nodiscard]] std::map<FormID, int> GetMagicHotkeys() const;
+    [[nodiscard]] std::map<FormID, int> GetMagicHotkeys(
+        const std::unordered_set<RE::TESForm*>* unregistered = nullptr) const;
     [[nodiscard]] std::map<int, FormID> GetHotkeysInUse() const;
 
     [[nodiscard]] FormID HotkeyIsInUse(FormID, int a_hotkey) const;

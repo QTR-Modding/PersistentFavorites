@@ -1,5 +1,7 @@
 #pragma once
 
+#include <unordered_set>
+
 namespace Utils {
     const auto mod_name = static_cast<std::string>(SKSE::PluginDeclaration::GetSingleton()->GetName());
     constexpr auto po3path = "Data/SKSE/Plugins/po3_Tweaks.dll";
@@ -12,6 +14,8 @@ namespace Utils {
     std::string DecodeTypeCode(std::uint32_t typeCode);
 
     bool FavoriteItem(const RE::TESForm* a_item, const RE::TESObjectREFR::InventoryItemMap& inv);
+
+    std::unordered_set<RE::TESForm*> FindUnregisteredMagicFavorites(const RE::MagicFavorites* magicFavorites);
 
     bool IsMagicMenuItem(const RE::TESForm* a_form);
 

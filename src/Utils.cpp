@@ -41,6 +41,27 @@ namespace Utils {
         return false;
     }
 
+    std::unordered_set<RE::TESForm*> FindUnregisteredMagicFavorites(const RE::MagicFavorites* magicFavorites) {
+        std::unordered_set<RE::TESForm*> unregistered;
+        unregistered.insert(magicFavorites->spells.begin(), magicFavorites->spells.end());
+        unregistered.insert(magicFavorites->hotkeys.begin(), magicFavorites->hotkeys.end());
+        unregistered.erase(nullptr);
+        if (unregistered.empty()) {
+            return unregistered;
+        }
+
+        const auto [forms, lock] = RE::TESForm::GetAllForms();
+        const RE::BSReadLockGuard guard{ lock };
+        if (forms) {
+            for (const auto& entry : *forms) {
+                if (unregistered.erase(entry.second) && unregistered.empty()) {
+                    break;
+                }
+            }
+        }
+        return unregistered;
+    }
+
     bool IsMagicMenuItem(const RE::TESForm* a_form) {
         const auto formType = a_form ? a_form->GetFormType() : RE::FormType::None;
         if (formType == RE::FormType::Spell || formType == RE::FormType::Shout) {
