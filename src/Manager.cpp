@@ -168,9 +168,7 @@ void Manager::ApplyHotkey(RE::TESForm* a_form) {
         hotkey_map[used_by] = hotkey;
         return;
     }
-    const auto a_spell = a_form->As<RE::SpellItem>();
-    if (a_form->GetFormType() == RE::FormType::Shout ||
-        (a_spell && RE::PlayerCharacter::GetSingleton()->HasSpell(a_spell))) {
+    if (Utils::IsMagicMenuItem(a_form)) {
         HotkeyMagic(a_form, hotkey);
         return;
     }
