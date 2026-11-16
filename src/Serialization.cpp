@@ -98,11 +98,14 @@ void SaveCallback(SKSE::SerializationInterface* serializationInterface) {
     }
 }
 
+void RevertCallback(SKSE::SerializationInterface*) {
+    Manager::GetSingleton()->Reset();
+}
+
 void LoadCallback(SKSE::SerializationInterface* serializationInterface) {
     logger::info("Loading Data from SKSE co-save.");
 
     const auto M = Manager::GetSingleton();
-    M->Reset();
 
     std::uint32_t type;
     std::uint32_t version;
@@ -148,4 +151,5 @@ void InitializeSerialization() {
     serialization->SetUniqueID(Settings::kDataKey);
     serialization->SetSaveCallback(SaveCallback);
     serialization->SetLoadCallback(LoadCallback);
+    serialization->SetRevertCallback(RevertCallback);
 }
