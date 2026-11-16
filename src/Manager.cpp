@@ -4,18 +4,18 @@
 #include "ClibUtilsQTR/FormReader.hpp"
 
 namespace {
-    bool IsSpellFavorited(const FormID a_spell, const RE::BSTArray<RE::TESForm*>& favs) {
+    bool IsMagicFavorited(const FormID a_formid, const RE::BSTArray<RE::TESForm*>& favs) {
         for (auto& fav : favs) {
             if (!fav) continue;
-            if (fav->GetFormID() == a_spell) return true;
+            if (fav->GetFormID() == a_formid) return true;
         }
         return false;
     }
 
-    void HotkeySpell(RE::TESForm* form, const int hotkey) {
+    void HotkeyMagic(RE::TESForm* form, const int hotkey) {
         const auto magic_favs = RE::MagicFavorites::GetSingleton();
         if (!magic_favs) {
-            logger::error("HotkeySpell: MagicFavorites is null.");
+            logger::error("HotkeyMagic: MagicFavorites is null.");
             return;
         }
         magic_favs->SetFavorite(form);
@@ -31,7 +31,7 @@ namespace {
             }
             index++;
         }
-        logger::error("HotkeySpell: Failed to set hotkey. FormID: {:x}, Hotkey: {}", form->GetFormID(), hotkey);
+        logger::error("HotkeyMagic: Failed to set hotkey. FormID: {:x}, Hotkey: {}", form->GetFormID(), hotkey);
     }
 }
 
@@ -148,7 +148,8 @@ FormID Manager::HotkeyIsInUse(const FormID formid, const int a_hotkey) const {
     return formid;
 }
 
-void Manager::ApplyHotkey(const FormID formid) {
+void Manager::ApplyHotkey(RE::TESForm* a_form) {
+    const auto formid = a_form->GetFormID();
     if (!formid) return;
     if (!favorites.contains(formid)) {
         return;
@@ -167,16 +168,14 @@ void Manager::ApplyHotkey(const FormID formid) {
         hotkey_map[used_by] = hotkey;
         return;
     }
-    const auto spell = FormReader::GetFormByID<RE::SpellItem>(formid);
-    if (spell && RE::PlayerCharacter::GetSingleton()->HasSpell(spell)) {
-        HotkeySpell(spell, hotkey);
+    const auto a_spell = a_form->As<RE::SpellItem>();
+    if (a_form->GetFormType() == RE::FormType::Shout ||
+        (a_spell && RE::PlayerCharacter::GetSingleton()->HasSpell(a_spell))) {
+        HotkeyMagic(a_form, hotkey);
         return;
     }
 
-    // Spell ended
-
-    // Now items
-    const auto bound = FormReader::GetFormByID<RE::TESBoundObject>(formid);
+    const auto bound = a_form->As<RE::TESBoundObject>();
     if (!bound) {
         logger::error("ApplyHotkey: Form not found. FormID: {:x}", formid);
         return;
@@ -256,14 +255,32 @@ RE::BSContainer::ForEachResult Manager::Visit(RE::SpellItem* a_spell) {
     if (const char* spell_name = a_spell->GetName(); !spell_name || spell_name[0] == '\0') {
         return RE::BSContainer::ForEachResult::kContinue;
     }
-    temp_all_spells.insert(a_spell->GetFormID());
+    temp_all_magic.insert(a_spell->GetFormID());
     return RE::BSContainer::ForEachResult::kContinue;
 }
 
 void Manager::CollectPlayerSpells() {
-    temp_all_spells.clear();
+    temp_all_magic.clear();
     const auto player = RE::PlayerCharacter::GetSingleton();
     player->VisitSpells(*this);
+}
+
+void Manager::CollectPlayerMagic() {
+    CollectPlayerSpells();
+    const auto player = RE::PlayerCharacter::GetSingleton();
+    const auto player_base = player->GetActorBase();
+    if (!player_base || !player_base->actorEffects) {
+        return;
+    }
+    const auto player_magic = player_base->actorEffects;
+    for (const auto a_shout : std::span(player_magic->shouts, player_magic->numShouts)) {
+        if (!a_shout || !a_shout->GetPlayable()) {
+            continue;
+        }
+        if (const char* shout_name = a_shout->GetName(); shout_name && shout_name[0] != '\0') {
+            temp_all_magic.insert(a_shout->GetFormID());
+        }
+    }
 }
 
 bool Manager::AddFavorites_Item() {
@@ -296,39 +313,39 @@ bool Manager::AddFavorites_Item() {
                                    : nullptr;
             inv_changes->SetFavorite(snd.second.get(), xList);
             favorited_any = true;
-            ApplyHotkey(a_formid);
+            ApplyHotkey(fst);
         }
     }
 
     return favorited_any;
 }
 
-bool Manager::AddFavorites_Spell() {
+bool Manager::AddFavorites_Magic() {
     bool favorited_any = false;
 
     const auto mg_favorites = RE::MagicFavorites::GetSingleton();
-    const auto& favorited_spells = mg_favorites->spells;
-    const auto hotkeyed_spells = GetMagicHotkeys();
+    const auto& favorited_magic = mg_favorites->spells;
+    const auto magic_hotkeys = GetMagicHotkeys();
 
-    CollectPlayerSpells();
+    CollectPlayerMagic();
 
-    if (temp_all_spells.empty()) {
+    if (temp_all_magic.empty()) {
         return false;
     }
-    for (auto& spell_formid : temp_all_spells) {
-        const auto spell = FormReader::GetFormByID(spell_formid);
-        if (!spell || !Utils::IsMagicMenuItem(spell)) continue;
-        if (IsSpellFavorited(spell_formid, favorited_spells)) {
-            if (favorites.insert(spell_formid).second) {
+    for (auto& a_formid : temp_all_magic) {
+        const auto a_form = FormReader::GetFormByID(a_formid);
+        if (!a_form || !Utils::IsMagicMenuItem(a_form)) continue;
+        if (IsMagicFavorited(a_formid, favorited_magic)) {
+            if (favorites.insert(a_formid).second) {
             }
-            UpdateHotkeyMap(spell_formid, GetHotkey(spell_formid, hotkeyed_spells));
-        } else if (favorites.contains(spell_formid)) {
-            mg_favorites->SetFavorite(spell);
-            ApplyHotkey(spell_formid);
+            UpdateHotkeyMap(a_formid, GetHotkey(a_formid, magic_hotkeys));
+        } else if (favorites.contains(a_formid)) {
+            mg_favorites->SetFavorite(a_form);
+            ApplyHotkey(a_form);
             favorited_any = true;
         }
     }
-    temp_all_spells.clear();
+    temp_all_magic.clear();
 
     return favorited_any;
 }
@@ -336,7 +353,7 @@ bool Manager::AddFavorites_Spell() {
 bool Manager::AddFavorites() {
     std::unique_lock lock(mutex_);
     const auto added_1 = AddFavorites_Item();
-    const auto added_2 = AddFavorites_Spell();
+    const auto added_2 = AddFavorites_Magic();
     return added_1 || added_2;
 }
 
@@ -359,30 +376,30 @@ void Manager::SyncFavorites_Item() {
     }
 }
 
-void Manager::SyncFavorites_Spell() {
-    const auto& favorited_spells = RE::MagicFavorites::GetSingleton()->spells;
-    const auto hotkeyed_spells = GetMagicHotkeys();
-    CollectPlayerSpells();
-    if (temp_all_spells.empty()) {
-        logger::warn("SyncFavorites: No spells found.");
+void Manager::SyncFavorites_Magic() {
+    const auto& favorited_magic = RE::MagicFavorites::GetSingleton()->spells;
+    const auto magic_hotkeys = GetMagicHotkeys();
+    CollectPlayerMagic();
+    if (temp_all_magic.empty()) {
+        logger::warn("SyncFavorites: No spells or shouts found.");
         return;
     }
-    for (auto& spell_formid : temp_all_spells) {
-        const auto spell = FormReader::GetFormByID(spell_formid);
-        if (!spell) continue;
-        if (IsSpellFavorited(spell_formid, favorited_spells)) {
-            if (favorites.insert(spell_formid).second) {
+    for (auto& a_formid : temp_all_magic) {
+        const auto a_form = FormReader::GetFormByID(a_formid);
+        if (!a_form) continue;
+        if (IsMagicFavorited(a_formid, favorited_magic)) {
+            if (favorites.insert(a_formid).second) {
             }
-            UpdateHotkeyMap(spell_formid, GetHotkey(spell_formid, hotkeyed_spells));
-        } else if (RemoveFavorite(spell_formid)) {
+            UpdateHotkeyMap(a_formid, GetHotkey(a_formid, magic_hotkeys));
+        } else if (RemoveFavorite(a_formid)) {
         }
     }
-    temp_all_spells.clear();
+    temp_all_magic.clear();
 };
 
 void Manager::SyncFavorites() {
     std::unique_lock lock(mutex_);
-    SyncFavorites_Spell();
+    SyncFavorites_Magic();
     SyncFavorites_Item();
 }
 
@@ -395,7 +412,7 @@ void Manager::FavoriteCheck_Item(const FormID formid) {
             logger::warn("FavoriteCheck_Item: Failed to favorite item. FormID: {:x}", formid);
             return;
         }
-        ApplyHotkey(formid);
+        ApplyHotkey(a_item);
     }
 }
 
@@ -410,7 +427,7 @@ void Manager::FavoriteCheck_Spell(const FormID formid) {
         return;
     }
     RE::MagicFavorites::GetSingleton()->SetFavorite(spell);
-    ApplyHotkey(formid);
+    ApplyHotkey(spell);
 }
 
 void Manager::CleanseMagicFavorites() {
@@ -449,14 +466,14 @@ void Manager::CleanseMagicFavorites() {
 void Manager::FavoriteCheck_Spell() {
     std::unique_lock lock(mutex_);
     CollectPlayerSpells();
-    if (temp_all_spells.empty()) {
+    if (temp_all_magic.empty()) {
         logger::warn("FavoriteCheck_Spell: No spells found.");
         return;
     }
-    for (auto& spell_formid : temp_all_spells) {
+    for (auto& spell_formid : temp_all_magic) {
         FavoriteCheck_Spell(spell_formid);
     }
-    temp_all_spells.clear();
+    temp_all_magic.clear();
 }
 
 // ReSharper disable once CppParameterMayBeConstPtrOrRef
@@ -486,7 +503,7 @@ void Manager::Reset() {
     std::unique_lock lock(mutex_);
     favorites.clear();
     hotkey_map.clear();
-    temp_all_spells.clear();
+    temp_all_magic.clear();
     Clear();
     logger::info("Manager reset.");
 }
