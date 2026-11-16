@@ -24,14 +24,14 @@ namespace {
 SKSEPluginLoad(const SKSE::LoadInterface *skse) {
     SetupLog();
     SKSE::Init(skse);
-    InitializeSerialization();
-    Hooks::Install();
-    SKSE::GetMessagingInterface()->RegisterListener(OnMessage);
     if (!Utils::IsPo3Installed()) {
         logger::error("Po3 is not installed.");
         Utils::MsgBoxesNotifs::Windows::Po3ErrMsg();
         return false;
     }
+    InitializeSerialization();
+    Hooks::Install();
+    SKSE::GetMessagingInterface()->RegisterListener(OnMessage);
     logger::info("Plugin loaded");
     return true;
 }
