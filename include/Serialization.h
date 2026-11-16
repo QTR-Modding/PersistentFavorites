@@ -23,6 +23,7 @@ public:
 void SaveCallback(SKSE::SerializationInterface* serializationInterface);
 
 void LoadCallback(SKSE::SerializationInterface* serializationInterface);
+void RevertCallback(SKSE::SerializationInterface*);
 
 
 void InitializeSerialization();
