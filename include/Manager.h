@@ -19,11 +19,11 @@ class Manager final :
     bool RemoveFavorite(FormID formid);
 
     int GetHotkey(const RE::InventoryEntryData* a_entry) const;
+    static int GetHotkey(FormID a_formid, const std::map<FormID, int>& a_hotkeys);
 
     [[nodiscard]] bool IsHotkeyValid(int hotkey) const;
 
-    void UpdateHotkeyMap(FormID item_formid, const RE::InventoryEntryData* a_entry);
-    void UpdateHotkeyMap(FormID spell_formid, int a_hotkey);
+    void UpdateHotkeyMap(FormID a_formid, int a_hotkey);
 
     [[nodiscard]] std::map<int, FormID> GetInventoryHotkeys() const;
     [[nodiscard]] std::map<FormID, int> GetMagicHotkeys() const;
