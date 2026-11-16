@@ -73,13 +73,16 @@ inline bool Manager::IsHotkeyValid(const int hotkey) const {
 }
 
 void Manager::UpdateHotkeyMap(const FormID item_formid, const RE::InventoryEntryData* a_entry) {
-    UpdateHotkeyMap(item_formid, GetHotkey(a_entry));
+    const auto hotkey = GetHotkey(a_entry);
+    if (IsHotkeyValid(hotkey)) {
+        hotkey_map[item_formid] = hotkey;
+    }
 }
 
-void Manager::UpdateHotkeyMap(const FormID formid, const int hotkey, const HotkeyUpdate update) {
+void Manager::UpdateHotkeyMap(const FormID formid, const int hotkey) {
     if (IsHotkeyValid(hotkey)) {
         hotkey_map[formid] = hotkey;
-    } else if (update == HotkeyUpdate::kSyncMenuClose) {
+    } else {
         hotkey_map.erase(formid);
     }
 }
@@ -350,7 +353,7 @@ void Manager::SyncFavorites_Item() {
         if (snd.second->IsFavorited()) {
             if (favorites.insert(fst->GetFormID()).second) {
             }
-            UpdateHotkeyMap(fst->GetFormID(), GetHotkey(snd.second.get()), HotkeyUpdate::kSyncMenuClose);
+            UpdateHotkeyMap(fst->GetFormID(), GetHotkey(snd.second.get()));
         } else if (RemoveFavorite(fst->GetFormID())) {
         }
     }
@@ -374,7 +377,7 @@ void Manager::SyncFavorites_Spell() {
             const auto slot = hotkey != hotkeyed_spells.end()
                                   ? hotkey->second
                                   : static_cast<int>(RE::ExtraHotkey::Hotkey::kUnbound);
-            UpdateHotkeyMap(spell_formid, slot, HotkeyUpdate::kSyncMenuClose);
+            UpdateHotkeyMap(spell_formid, slot);
         } else if (RemoveFavorite(spell_formid)) {
         }
     }

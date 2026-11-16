@@ -22,10 +22,8 @@ class Manager final :
 
     [[nodiscard]] bool IsHotkeyValid(int hotkey) const;
 
-    enum class HotkeyUpdate { kRememberAssigned, kSyncMenuClose };
-
     void UpdateHotkeyMap(FormID item_formid, const RE::InventoryEntryData* a_entry);
-    void UpdateHotkeyMap(FormID formid, int hotkey, HotkeyUpdate update = HotkeyUpdate::kRememberAssigned);
+    void UpdateHotkeyMap(FormID formid, int hotkey);
 
     [[nodiscard]] std::map<int, FormID> GetInventoryHotkeys() const;
     [[nodiscard]] std::map<FormID, int> GetMagicHotkeys() const;
