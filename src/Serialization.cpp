@@ -65,29 +65,24 @@
             return false;
         }
 
-        if (!serializationInterface->ResolveFormID(formid, formid)) {
-            logger::error("Failed to resolve form ID, 0x{:X}.", formid);
-            continue;
-        }
-
         std::string editorid;
         if (!Serialization::read_string(serializationInterface, editorid)) {
             logger::error("Failed to read EditorID for FormID {:x}", formid);
             return false;
         }
 
-        SaveDataLHS lhs({formid, editorid});
-
-        if (plugin_version < 2) {
-            m_Data[lhs] = -1;
-        } else {
-            SaveDataRHS rhs;
-            if (!serializationInterface->ReadRecordData(rhs)) {
-                logger::error("Failed to read hotkey");
-                return false;
-            }
-            m_Data[lhs] = rhs;
+        SaveDataRHS rhs = -1;
+        if (plugin_version >= 2 && !serializationInterface->ReadRecordData(rhs)) {
+            logger::error("Failed to read hotkey");
+            return false;
         }
+
+        if (!serializationInterface->ResolveFormID(formid, formid)) {
+            logger::error("Failed to resolve form ID, 0x{:X}.", formid);
+            continue;
+        }
+
+        m_Data[{formid, editorid}] = rhs;
 
         logger::info("Loaded data for FormID {:x}, EditorID {}", formid, editorid);
     }
