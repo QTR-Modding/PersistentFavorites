@@ -12,11 +12,11 @@ namespace {
         return false;
     }
 
-    void HotkeySpell(RE::TESForm* form, const int hotkey) {
+    bool HotkeySpell(RE::TESForm* form, const int hotkey) {
         const auto magic_favs = RE::MagicFavorites::GetSingleton();
         if (!magic_favs) {
             logger::error("HotkeySpell: MagicFavorites is null.");
-            return;
+            return false;
         }
         magic_favs->SetFavorite(form);
         auto& hotkeys = magic_favs->hotkeys;
@@ -24,14 +24,15 @@ namespace {
         for (auto& hotkeyed_spell : hotkeys) {
             if (!hotkeyed_spell && index == hotkey) {
                 hotkeyed_spell = form;
-                return;
+                return true;
             }
             if (hotkeyed_spell && hotkeyed_spell->GetFormID() == form->GetFormID()) {
-                return;
+                return true;
             }
             index++;
         }
         logger::error("HotkeySpell: Failed to set hotkey. FormID: {:x}, Hotkey: {}", form->GetFormID(), hotkey);
+        return false;
     }
 }
 
@@ -39,6 +40,7 @@ namespace {
 bool Manager::RemoveFavorite(const FormID formid) {
     const auto removed = favorites.erase(formid) > 0;
     hotkey_map.erase(formid);
+    hotkeys_seen_in_menu.erase(formid);
     return removed;
 };
 
@@ -72,16 +74,14 @@ inline bool Manager::IsHotkeyValid(const int hotkey) const {
     return allowed_hotkeys.contains(hotkey);
 }
 
-void Manager::UpdateHotkeyMap(const FormID item_formid, const RE::InventoryEntryData* a_entry) {
-    const auto hotkey = GetHotkey(a_entry);
+void Manager::UpdateHotkeyMap(const FormID formid, const int hotkey, const HotkeySync sync) {
     if (IsHotkeyValid(hotkey)) {
-        hotkey_map[item_formid] = hotkey;
-    }
-}
-
-void Manager::UpdateHotkeyMap(const FormID spell_formid, const int a_hotkey) {
-    if (IsHotkeyValid(a_hotkey)) {
-        hotkey_map[spell_formid] = a_hotkey;
+        hotkey_map[formid] = hotkey;
+        if (sync == HotkeySync::kMenuOpen) {
+            hotkeys_seen_in_menu.insert(formid);
+        }
+    } else if (sync == HotkeySync::kMenuClose && hotkeys_seen_in_menu.contains(formid)) {
+        hotkey_map.erase(formid);
     }
 }
 
@@ -146,7 +146,7 @@ FormID Manager::HotkeyIsInUse(const FormID formid, const int a_hotkey) const {
     return formid;
 }
 
-void Manager::ApplyHotkey(const FormID formid) {
+void Manager::ApplyHotkey(const FormID formid, const bool opening_menu) {
     if (!formid) return;
     if (!favorites.contains(formid)) {
         return;
@@ -167,7 +167,9 @@ void Manager::ApplyHotkey(const FormID formid) {
     }
     const auto spell = FormReader::GetFormByID<RE::SpellItem>(formid);
     if (spell && RE::PlayerCharacter::GetSingleton()->HasSpell(spell)) {
-        HotkeySpell(spell, hotkey);
+        if (HotkeySpell(spell, hotkey) && opening_menu) {
+            hotkeys_seen_in_menu.insert(formid);
+        }
         return;
     }
 
@@ -213,9 +215,11 @@ void Manager::ApplyHotkey(const FormID formid) {
         xList->Add(xHotkey);
     }
     const int added_hotkey = GetHotkey(item->second.second.get());
-    if (added_hotkey != static_cast<int>(hotkey)) {
+    if (added_hotkey != hotkey) {
         logger::error("ApplyHotkey: Failed to add hotkey. FormID: {:x}, Hotkey: {}, added:{}", formid, hotkey,
                       added_hotkey);
+    } else if (opening_menu) {
+        hotkeys_seen_in_menu.insert(formid);
     }
 }
 
@@ -228,7 +232,7 @@ void Manager::SyncHotkeys_Item() {
         if (!snd.second) continue;
         if (!snd.second->extraLists || snd.second->extraLists->empty()) continue;
         if (!snd.second->IsFavorited()) continue;
-        UpdateHotkeyMap(fst->GetFormID(), snd.second.get());
+        UpdateHotkeyMap(fst->GetFormID(), GetHotkey(snd.second.get()), HotkeySync::kLoad);
     }
 }
 
@@ -240,7 +244,7 @@ void Manager::SyncHotkeys_Spell() {
         if (const char* name = spell->GetName(); !name || name[0] == '\0') continue;
         if (!mg_hotkeys.contains(spell->GetFormID())) continue;
         const auto spell_formid = spell->GetFormID();
-        UpdateHotkeyMap(spell_formid, mg_hotkeys.at(spell_formid));
+        UpdateHotkeyMap(spell_formid, mg_hotkeys.at(spell_formid), HotkeySync::kLoad);
     }
 }
 
@@ -288,14 +292,14 @@ bool Manager::AddFavorites_Item() {
         if (snd.second->IsFavorited()) {
             if (favorites.insert(a_formid).second) {
             }
-            UpdateHotkeyMap(a_formid, snd.second.get());
+            UpdateHotkeyMap(a_formid, GetHotkey(snd.second.get()), HotkeySync::kMenuOpen);
         } else if (favorites.contains(a_formid)) {
             const auto xList = snd.second->extraLists && !snd.second->extraLists->empty()
                                    ? snd.second->extraLists->front()
                                    : nullptr;
             inv_changes->SetFavorite(snd.second.get(), xList);
             favorited_any = true;
-            ApplyHotkey(a_formid);
+            ApplyHotkey(a_formid, true);
         }
     }
 
@@ -320,10 +324,12 @@ bool Manager::AddFavorites_Spell() {
         if (IsSpellFavorited(spell_formid, favorited_spells)) {
             if (favorites.insert(spell_formid).second) {
             }
-            if (hotkeyed_spells.contains(spell_formid)) UpdateHotkeyMap(spell_formid, hotkeyed_spells.at(spell_formid));
+            if (const auto hotkey = hotkeyed_spells.find(spell_formid); hotkey != hotkeyed_spells.end()) {
+                UpdateHotkeyMap(spell_formid, hotkey->second, HotkeySync::kMenuOpen);
+            }
         } else if (favorites.contains(spell_formid)) {
             mg_favorites->SetFavorite(spell);
-            ApplyHotkey(spell_formid);
+            ApplyHotkey(spell_formid, true);
             favorited_any = true;
         }
     }
@@ -351,7 +357,7 @@ void Manager::SyncFavorites_Item() {
         if (snd.second->IsFavorited()) {
             if (favorites.insert(fst->GetFormID()).second) {
             }
-            UpdateHotkeyMap(fst->GetFormID(), snd.second.get());
+            UpdateHotkeyMap(fst->GetFormID(), GetHotkey(snd.second.get()), HotkeySync::kMenuClose);
         } else if (RemoveFavorite(fst->GetFormID())) {
         }
     }
@@ -371,7 +377,9 @@ void Manager::SyncFavorites_Spell() {
         if (IsSpellFavorited(spell_formid, favorited_spells)) {
             if (favorites.insert(spell_formid).second) {
             }
-            if (hotkeyed_spells.contains(spell_formid)) UpdateHotkeyMap(spell_formid, hotkeyed_spells.at(spell_formid));
+            const auto hotkey = hotkeyed_spells.find(spell_formid);
+            UpdateHotkeyMap(spell_formid, hotkey != hotkeyed_spells.end() ? hotkey->second : -1,
+                            HotkeySync::kMenuClose);
         } else if (RemoveFavorite(spell_formid)) {
         }
     }
@@ -382,6 +390,7 @@ void Manager::SyncFavorites() {
     std::unique_lock lock(mutex_);
     SyncFavorites_Spell();
     SyncFavorites_Item();
+    hotkeys_seen_in_menu.clear();
 }
 
 void Manager::FavoriteCheck_Item(const FormID formid) {
@@ -484,6 +493,7 @@ void Manager::Reset() {
     std::unique_lock lock(mutex_);
     favorites.clear();
     hotkey_map.clear();
+    hotkeys_seen_in_menu.clear();
     temp_all_spells.clear();
     Clear();
     logger::info("Manager reset.");

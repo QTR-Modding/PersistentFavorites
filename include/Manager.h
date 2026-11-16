@@ -12,6 +12,7 @@ class Manager final :
 
     std::unordered_set<FormID> favorites;
     std::unordered_map<FormID, int> hotkey_map;
+    std::unordered_set<FormID> hotkeys_seen_in_menu;
     std::unordered_set<FormID> temp_all_spells;
 
     const std::set<int> allowed_hotkeys = {0, 1, 2, 3, 4, 5, 6, 7};
@@ -22,8 +23,9 @@ class Manager final :
 
     [[nodiscard]] bool IsHotkeyValid(int hotkey) const;
 
-    void UpdateHotkeyMap(FormID item_formid, const RE::InventoryEntryData* a_entry);
-    void UpdateHotkeyMap(FormID spell_formid, int a_hotkey);
+    enum class HotkeySync { kLoad, kMenuOpen, kMenuClose };
+
+    void UpdateHotkeyMap(FormID formid, int hotkey, HotkeySync sync);
 
     [[nodiscard]] std::map<int, FormID> GetInventoryHotkeys() const;
     [[nodiscard]] std::map<FormID, int> GetMagicHotkeys() const;
@@ -31,7 +33,7 @@ class Manager final :
 
     [[nodiscard]] FormID HotkeyIsInUse(FormID, int a_hotkey) const;
 
-    void ApplyHotkey(FormID formid);
+    void ApplyHotkey(FormID formid, bool opening_menu = false);
 
     void SyncHotkeys_Item();
 
