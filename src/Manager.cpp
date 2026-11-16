@@ -349,9 +349,14 @@ void Manager::SyncFavorites_Item() {
         if (!name || name[0] == '\0') continue;
         if (!snd.second) continue;
         if (snd.second->IsFavorited()) {
-            if (favorites.insert(fst->GetFormID()).second) {
+            const auto a_formid = fst->GetFormID();
+            if (favorites.insert(a_formid).second) {
             }
-            UpdateHotkeyMap(fst->GetFormID(), snd.second.get());
+            if (const auto a_hotkey = GetHotkey(snd.second.get()); IsHotkeyValid(a_hotkey)) {
+                hotkey_map[a_formid] = a_hotkey;
+            } else {
+                hotkey_map.erase(a_formid);
+            }
         } else if (RemoveFavorite(fst->GetFormID())) {
         }
     }
@@ -371,7 +376,11 @@ void Manager::SyncFavorites_Spell() {
         if (IsSpellFavorited(spell_formid, favorited_spells)) {
             if (favorites.insert(spell_formid).second) {
             }
-            if (hotkeyed_spells.contains(spell_formid)) UpdateHotkeyMap(spell_formid, hotkeyed_spells.at(spell_formid));
+            if (const auto a_hotkey_entry = hotkeyed_spells.find(spell_formid); a_hotkey_entry != hotkeyed_spells.end()) {
+                hotkey_map[spell_formid] = a_hotkey_entry->second;
+            } else {
+                hotkey_map.erase(spell_formid);
+            }
         } else if (RemoveFavorite(spell_formid)) {
         }
     }
