@@ -75,7 +75,7 @@
         }
 
         SaveDataRHS rhs = -1;
-        if (plugin_version >= 2 && !serializationInterface->ReadRecordData(rhs)) {
+        if (plugin_version >= 2 && serializationInterface->ReadRecordData(rhs) != sizeof(rhs)) {
             logger::error("Failed to read hotkey");
             return false;
         }
