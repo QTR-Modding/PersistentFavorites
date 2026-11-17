@@ -51,7 +51,10 @@
     }
 
     std::size_t recordDataSize;
-    serializationInterface->ReadRecordData(recordDataSize);
+    if (serializationInterface->ReadRecordData(recordDataSize) != sizeof(recordDataSize)) {
+        logger::error("Failed to read the favorite record count.");
+        return false;
+    }
     logger::info("Loading data from serialization interface with size: {}", recordDataSize);
 
     Locker locker(m_Lock);
