@@ -16,11 +16,7 @@ RE::UI_MESSAGE_RESULTS Hooks::MenuHook<MenuType>::ProcessMessage_Hook(RE::UIMess
 
     if (msg_type == 1) {
         is_menu_open = true;
-        SKSE::GetTaskInterface()->AddTask([] {
-            if (Manager::GetSingleton()->AddFavorites()) {
-                RE::SendUIMessage::SendInventoryUpdateMessage(RE::PlayerCharacter::GetSingleton(), nullptr);
-            }
-        });
+        Manager::GetSingleton()->AddFavorites();
     }
     if (msg_type == 3) {
         is_menu_open = false;
