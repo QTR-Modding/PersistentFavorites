@@ -63,7 +63,7 @@
     for (size_t i = 0; i < recordDataSize; i++) {
         std::uint32_t formid;
 
-        if (!serializationInterface->ReadRecordData(formid)) {
+        if (serializationInterface->ReadRecordData(formid) != sizeof(formid)) {
             logger::error("Failed to read form ID");
             return false;
         }
