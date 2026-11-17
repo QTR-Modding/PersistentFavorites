@@ -16,7 +16,6 @@ public:
                             std::uint32_t version) override;
 
     [[nodiscard]] bool Load(SKSE::SerializationInterface* serializationInterface, unsigned int plugin_version);
-    bool Load(SKSE::SerializationInterface*, const bool) override { return false; }
     const char* GetType() override { return "SaveLoadData"; }
 };
 
