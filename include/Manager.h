@@ -12,7 +12,7 @@ class Manager final :
 
     std::unordered_set<FormID> favorites;
     std::unordered_map<FormID, int> hotkey_map;
-    std::unordered_set<FormID> temp_all_spells;
+    std::unordered_set<FormID> temp_all_magic;
 
     const std::set<int> allowed_hotkeys = {0, 1, 2, 3, 4, 5, 6, 7};
 
@@ -31,7 +31,7 @@ class Manager final :
 
     [[nodiscard]] FormID HotkeyIsInUse(FormID, int a_hotkey) const;
 
-    void ApplyHotkey(FormID formid);
+    void ApplyHotkey(RE::TESForm* a_form);
 
     void SyncHotkeys_Item();
 
@@ -42,11 +42,12 @@ class Manager final :
     RE::BSContainer::ForEachResult Visit(RE::SpellItem* a_spell) override;
 
     void CollectPlayerSpells();
+    void CollectPlayerMagic();
 
     bool AddFavorites_Item();
-    bool AddFavorites_Spell();
+    bool AddFavorites_Magic();
     void SyncFavorites_Item();
-    void SyncFavorites_Spell();
+    void SyncFavorites_Magic();
     void FavoriteCheck_Spell(FormID formid);
 
 public:

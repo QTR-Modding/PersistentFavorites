@@ -12,15 +12,17 @@ void Hooks::Install() {
 
 template <typename MenuType>
 RE::UI_MESSAGE_RESULTS Hooks::MenuHook<MenuType>::ProcessMessage_Hook(RE::UIMessage& a_message) {
-    const auto msg_type = static_cast<int>(a_message.type.get());
+    const auto msg_type = a_message.type.get();
 
-    if (msg_type == 1) {
+    if (msg_type == RE::UI_MESSAGE_TYPE::kShow) {
         is_menu_open = true;
         SKSE::GetTaskInterface()->AddTask([] {
-            Manager::GetSingleton()->AddFavorites();
+            if (Manager::GetSingleton()->AddFavorites()) {
+                RE::SendUIMessage::SendInventoryUpdateMessage(RE::PlayerCharacter::GetSingleton(), nullptr);
+            }
         });
     }
-    if (msg_type == 3) {
+    if (msg_type == RE::UI_MESSAGE_TYPE::kHide) {
         is_menu_open = false;
         SKSE::GetTaskInterface()->AddTask([] {
             Manager::GetSingleton()->SyncFavorites();
